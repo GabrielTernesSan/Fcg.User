@@ -15,9 +15,8 @@ namespace Fcg.User.Infra.Tables.Mapping
                    .IsRequired()
                    .HasMaxLength(100);
 
-            builder.Property(u => u.Email)
-                   .IsRequired()
-                   .HasMaxLength(100);
+            builder.Property(u => u.Wallet)
+                   .IsRequired();
 
             builder.HasMany(u => u.Library)
                    .WithOne()

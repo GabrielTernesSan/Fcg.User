@@ -1,5 +1,5 @@
+using Fcg.User.Domain.Queries;
 using Fcg.User.Infra;
-using FluentValidation;
 using MediatR;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -62,32 +62,51 @@ builder.Services.AddAuthentication("Bearer")
         };
     });
 
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("AdminPolicy", policy => policy.RequireRole("Admin"));
-});
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("AdminPolicy", policy => policy.RequireRole("Admin"))
+    .AddPolicy("InternalPolicy", policy =>
+    {
+        policy.RequireAssertion(context =>
+        {
+            // pega o httpContext
+            if (context.Resource is not HttpContext http) return false;
+
+            // pega a chave enviada no header
+            if (!http.Request.Headers.TryGetValue("X-Internal-Key", out var providedKey))
+                return false;
+
+            // busca a chave configurada (em appsettings)
+            var expectedKey = http.RequestServices
+                .GetRequiredService<IConfiguration>()
+                .GetValue<string>("InternalApiKey");
+
+            return expectedKey == providedKey;
+        });
+    });
 #endregion
 
 var app = builder.Build();
 
 #region User Endpoints
-app.MapGet("/api/users/{id}", async (Guid id, IUserQuery _userQuery) =>
+app.MapGet("/api/users/{id}", async (Guid id, IMediator _mediator) =>
 {
-    var user = await _userQuery.GetByIdUserAsync(id);
+    var user = await _mediator.Send(new GetUserByIdRequest { Id = id });
 
     return user is not null ? Results.Ok(user) : Results.NotFound();
 }).RequireAuthorization().WithTags("Users");
 
-app.MapGet("/api/users/{id}/games", async (Guid id, IUserQuery _userQuery) =>
+app.MapPut("/api/users/{id}", async (Guid id, [FromBody] UpdateUserRequest request, IMediator _mediator) =>
 {
-    var user = await _userQuery.GetLibraryByUserAsync(id);
+    var result = await _mediator.Send(request);
 
-    return user is not null ? Results.Ok(user) : Results.NotFound();
+    return result.HasErrors
+        ? Results.BadRequest(result)
+        : Results.Ok(result);
 }).RequireAuthorization().WithTags("Users");
 
 app.MapGet("/api/users", async (IUserQuery _userQuery) =>
 {
-    var users = await _userQuery.GetAllUsersAsync();
+    var users = await _userQuery.GetUsersAsync();
 
     return users is not null ? Results.Ok(users) : Results.NotFound();
 }).RequireAuthorization("AdminPolicy").WithTags("Users");
@@ -100,8 +119,34 @@ app.MapDelete("/api/users/{id}", async (Guid id, IMediator _mediator) =>
         ? Results.BadRequest(result)
         : Results.Ok(result);
 }).RequireAuthorization("AdminPolicy").WithTags("Users");
-#endregion
 
+app.MapPost("/api/users", async ([FromBody] RegisterUserRequest request, IMediator _mediator) =>
+{
+    var result = await _mediator.Send(request);
+
+    return result.HasErrors
+        ? Results.BadRequest(result)
+        : Results.Ok(result);
+}).RequireAuthorization("InternalPolicy").WithTags("Users");
+
+app.MapPost("/api/users/{id}/credit", async (Guid id, [FromBody] CreditWalletRequest request, IMediator _mediator) =>
+{
+    var result = await _mediator.Send(request);
+
+    return result.HasErrors
+        ? Results.BadRequest(result)
+        : Results.Ok(result);
+}).RequireAuthorization("InternalPolicy").WithTags("Users");
+
+app.MapPost("/api/users/{id}/debit", async (Guid id, [FromBody] DebitWalletRequest request, IMediator _mediator) =>
+{
+    var result = await _mediator.Send(request);
+
+    return result.HasErrors
+        ? Results.BadRequest(result)
+        : Results.Ok(result);
+}).RequireAuthorization("InternalPolicy").WithTags("Users");
+#endregion
 
 #region Middleware Pipeline
 if (app.Environment.IsDevelopment())
