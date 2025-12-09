@@ -1,4 +1,4 @@
-﻿using Fcg.User.Application.Behaviors;
+using Fcg.User.Application.Behaviors;
 using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;

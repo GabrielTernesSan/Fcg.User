@@ -17,10 +17,10 @@ namespace Fcg.User.Infra.Tables.Mapping
             builder.Property(ug => ug.GameId)
                    .IsRequired();
 
-            builder.HasOne<User>()
-                   .WithMany(u => u.Library)
-                   .HasForeignKey(ug => ug.UserId)
-                   .OnDelete(DeleteBehavior.Cascade);
+            builder.HasOne(ug => ug.User)
+                .WithMany()
+                .HasForeignKey(ug => ug.UserId)
+                .IsRequired();
         }
     }
 }

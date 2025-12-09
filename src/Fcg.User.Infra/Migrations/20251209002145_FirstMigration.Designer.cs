@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Fcg.User.Infra.Migrations
 {
     [DbContext(typeof(FcgUserDbContext))]
-    [Migration("20251121221753_FirstMigration")]
+    [Migration("20251209002145_FirstMigration")]
     partial class FirstMigration
     {
         /// <inheritdoc />
@@ -31,13 +31,12 @@ namespace Fcg.User.Infra.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<decimal>("Wallet")
+                        .HasColumnType("numeric");
 
                     b.HasKey("Id");
 
@@ -68,11 +67,13 @@ namespace Fcg.User.Infra.Migrations
 
             modelBuilder.Entity("Fcg.User.Infra.Tables.UserGame", b =>
                 {
-                    b.HasOne("Fcg.User.Infra.Tables.User", null)
+                    b.HasOne("Fcg.User.Infra.Tables.User", "User")
                         .WithMany("Library")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Fcg.User.Infra.Tables.User", b =>

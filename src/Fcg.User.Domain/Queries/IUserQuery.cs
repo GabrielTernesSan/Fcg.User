@@ -1,10 +1,10 @@
-﻿using Fcg.User.Domain.Queries.Responses;
+using Fcg.User.Domain.Queries.Responses;
 
 namespace Fcg.User.Domain.Queries
 {
     public interface IUserQuery
     {
-        Task<GetUserResponse> GetUserByIdAsync(Guid id);
-        Task<IReadOnlyCollection<GetUserResponse>> GetUsersAsync();
+        Task<GetUserResponse> GetUserByIdAsync(Guid id, CancellationToken cancellationToken);
+        Task<IReadOnlyCollection<GetUserResponse>> GetUsersAsync(CancellationToken cancellationToken);
     }
 }

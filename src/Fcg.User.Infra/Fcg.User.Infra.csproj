@@ -14,8 +14,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Fcg.User.Domain\Fcg.User.Domain.csproj" />
     <ProjectReference Include="..\Fcg.User.Application\Fcg.User.Application.csproj" />
+    <ProjectReference Include="..\Fcg.User.Domain\Fcg.User.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,3 +1,4 @@
+using Fcg.User.Application;
 using Fcg.User.Application.Requests;
 using Fcg.User.Domain.Queries;
 using Fcg.User.Infra;
@@ -9,7 +10,7 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-//builder.Services.AddApplicationLayer();
+builder.Services.AddApplicationLayer();
 builder.Services.AddInfraLayer(builder.Configuration);
 
 builder.Services.AddControllers();
@@ -97,19 +98,19 @@ app.MapGet("/api/users/{id}", async (Guid id, IMediator _mediator) =>
     return Results.Ok(response);
 }).RequireAuthorization().WithTags("Users");
 
+app.MapGet("/api/users", async(IMediator _mediator) =>
+{
+    var response = await _mediator.Send(new GetUsersRequest());
+
+    return Results.Ok(response);
+}).RequireAuthorization("AdminPolicy").WithTags("Users");
+
 app.MapPut("/api/users/{id}", async (Guid id, [FromBody] UpdateUserRequest request, IMediator _mediator) =>
 {
     var response = await _mediator.Send(request);
 
     return Results.Ok(response);
 }).RequireAuthorization().WithTags("Users");
-
-app.MapGet("/api/users", async (IUserQuery _userQuery) =>
-{
-    var users = await _userQuery.GetUsersAsync();
-
-    return users is not null ? Results.Ok(users) : Results.NotFound();
-}).RequireAuthorization("AdminPolicy").WithTags("Users");
 
 app.MapDelete("/api/users/{id}", async (Guid id, IMediator _mediator) =>
 {
@@ -127,20 +128,16 @@ app.MapPost("/api/users", async ([FromBody] RegisterUserRequest request, IMediat
 
 app.MapPost("/api/users/{id}/credit", async (Guid id, [FromBody] CreditWalletRequest request, IMediator _mediator) =>
 {
-    var result = await _mediator.Send(request);
+    var response = await _mediator.Send(request);
 
-    return result.HasErrors
-        ? Results.BadRequest(result)
-        : Results.Ok(result);
+    return Results.Ok(response);
 }).RequireAuthorization("InternalPolicy").WithTags("Users");
 
 app.MapPost("/api/users/{id}/debit", async (Guid id, [FromBody] DebitWalletRequest request, IMediator _mediator) =>
 {
-    var result = await _mediator.Send(request);
+    var response = await _mediator.Send(request);
 
-    return result.HasErrors
-        ? Results.BadRequest(result)
-        : Results.Ok(result);
+    return Results.Ok(response);
 }).RequireAuthorization("InternalPolicy").WithTags("Users");
 #endregion
 

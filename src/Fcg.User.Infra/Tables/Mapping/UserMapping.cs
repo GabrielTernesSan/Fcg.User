@@ -17,11 +17,6 @@ namespace Fcg.User.Infra.Tables.Mapping
 
             builder.Property(u => u.Wallet)
                    .IsRequired();
-
-            builder.HasMany(u => u.Library)
-                   .WithOne()
-                   .HasForeignKey(ug => ug.UserId)
-                   .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
