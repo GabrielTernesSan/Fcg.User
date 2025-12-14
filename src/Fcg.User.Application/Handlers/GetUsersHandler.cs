@@ -1,11 +1,12 @@
 using Fcg.User.Application.Requests;
 using Fcg.User.Common;
 using Fcg.User.Domain.Queries;
+using Fcg.User.Domain.Queries.Responses;
 using MediatR;
 
 namespace Fcg.User.Application.Handlers
 {
-    public class GetUsersHandler : IRequestHandler<GetUsersRequest, Response>
+    public class GetUsersHandler : IRequestHandler<GetUsersRequest, Response<PagedResponse<GetUsersResponse>>>
     {
         private readonly IUserQuery _userQuery;
 
@@ -14,19 +15,15 @@ namespace Fcg.User.Application.Handlers
             _userQuery = userQuery;
         }
 
-        public async Task<Response> Handle(GetUsersRequest request, CancellationToken cancellationToken)
+        public async Task<Response<PagedResponse<GetUsersResponse>>> Handle(GetUsersRequest request, CancellationToken cancellationToken)
         {
-            var response = new Response();
+            var s = request.Skip ?? 0;
+            var t = request.Take ?? 20;
 
-            var users = await _userQuery.GetUsersAsync(cancellationToken);
-
-            if (users == null)
+            var response = new Response<PagedResponse<GetUsersResponse>>
             {
-                response.AddError($"Usuários não encontrados!");
-                return response;
-            }
-
-            // TODO: Tem que implementar a lógica de buscar os usuários por ID no projeto Auth.
+                Result = await _userQuery.GetUsersAsync(s, t)
+            };
 
             return response;
         }

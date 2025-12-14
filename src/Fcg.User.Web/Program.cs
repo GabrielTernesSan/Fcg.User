@@ -1,11 +1,9 @@
 using Fcg.User.Application;
 using Fcg.User.Application.Requests;
-using Fcg.User.Domain.Queries;
 using Fcg.User.Infra;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,24 +19,24 @@ builder.Services.AddHttpContextAccessor();
 #region Swagger Configuration
 builder.Services.AddSwaggerGen(c =>
 {
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
     {
         Name = "Authorization",
-        Type = SecuritySchemeType.Http,
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
         Scheme = "bearer",
         BearerFormat = "JWT",
-        In = ParameterLocation.Header,
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
         Description = "Insira o token JWT com prefixo 'Bearer '"
     });
 
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
     {
         {
-            new OpenApiSecurityScheme
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
             {
-                Reference = new OpenApiReference
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
                 {
-                    Type = ReferenceType.SecurityScheme,
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
                     Id = "Bearer"
                 }
             },
@@ -65,27 +63,10 @@ builder.Services.AddAuthentication("Bearer")
         };
     });
 
-builder.Services.AddAuthorizationBuilder()
-    .AddPolicy("AdminPolicy", policy => policy.RequireRole("Admin"))
-    .AddPolicy("InternalPolicy", policy =>
-    {
-        policy.RequireAssertion(context =>
-        {
-            // pega o httpContext
-            if (context.Resource is not HttpContext http) return false;
-
-            // pega a chave enviada no header
-            if (!http.Request.Headers.TryGetValue("X-Internal-Key", out var providedKey))
-                return false;
-
-            // busca a chave configurada (em appsettings)
-            var expectedKey = http.RequestServices
-                .GetRequiredService<IConfiguration>()
-                .GetValue<string>("InternalApiKey");
-
-            return expectedKey == providedKey;
-        });
-    });
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminPolicy", policy => policy.RequireRole("Admin"));
+});
 #endregion
 
 var app = builder.Build();
@@ -96,49 +77,53 @@ app.MapGet("/api/users/{id}", async (Guid id, IMediator _mediator) =>
     var response = await _mediator.Send(new GetUserByIdRequest { Id = id });
 
     return Results.Ok(response);
-}).RequireAuthorization().WithTags("Users");
+}).AllowAnonymous().WithTags("Users");
 
-app.MapGet("/api/users", async(IMediator _mediator) =>
+app.MapGet("/api/users", async ([AsParameters] GetUsersRequest request, IMediator _mediator) =>
 {
-    var response = await _mediator.Send(new GetUsersRequest());
+    var response = await _mediator.Send(request);
 
     return Results.Ok(response);
-}).RequireAuthorization("AdminPolicy").WithTags("Users");
+}).AllowAnonymous().WithTags("Users");
 
 app.MapPut("/api/users/{id}", async (Guid id, [FromBody] UpdateUserRequest request, IMediator _mediator) =>
 {
     var response = await _mediator.Send(request);
 
     return Results.Ok(response);
-}).RequireAuthorization().WithTags("Users");
+}).AllowAnonymous().WithTags("Users");
 
 app.MapDelete("/api/users/{id}", async (Guid id, IMediator _mediator) =>
 {
     var response = await _mediator.Send(new DeleteUserRequest { Id = id });
 
     return Results.Ok(response);
-}).RequireAuthorization("AdminPolicy").WithTags("Users");
+}).AllowAnonymous().WithTags("Users");
 
 app.MapPost("/api/users", async ([FromBody] RegisterUserRequest request, IMediator _mediator) =>
 {
     var response = await _mediator.Send(request);
 
     return Results.Ok(response);
-}).RequireAuthorization("InternalPolicy").WithTags("Users");
+}).AllowAnonymous().WithTags("Users");
 
 app.MapPost("/api/users/{id}/credit", async (Guid id, [FromBody] CreditWalletRequest request, IMediator _mediator) =>
 {
+    request.Id = id;
+
     var response = await _mediator.Send(request);
 
     return Results.Ok(response);
-}).RequireAuthorization("InternalPolicy").WithTags("Users");
+}).AllowAnonymous().WithTags("Users");
 
 app.MapPost("/api/users/{id}/debit", async (Guid id, [FromBody] DebitWalletRequest request, IMediator _mediator) =>
 {
+    request.Id = id;
+
     var response = await _mediator.Send(request);
 
     return Results.Ok(response);
-}).RequireAuthorization("InternalPolicy").WithTags("Users");
+}).AllowAnonymous().WithTags("Users");
 #endregion
 
 #region Middleware Pipeline
@@ -148,8 +133,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseHttpsRedirection();
+
 app.UseAuthentication();
 app.UseAuthorization();
+
 app.MapControllers();
+
 app.Run();
 #endregion

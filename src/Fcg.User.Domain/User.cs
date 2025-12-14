@@ -46,5 +46,24 @@ namespace Fcg.User.Domain
             if (game != null)
                 Library.Remove(game);
         }
+
+        public void AddFunds(decimal amount)
+        {
+            if (amount <= 0)
+                throw new ArgumentException("O valor a ser adicionado deve ser maior que zero.", nameof(amount));
+
+            Walllet += amount;
+        }
+
+        public void RemoveFunds(decimal amount)
+        {
+            if (amount <= 0)
+                throw new ArgumentException("O valor a ser removido deve ser maior que zero.", nameof(amount));
+
+            if (amount > Walllet)
+                throw new InvalidOperationException("Saldo insuficiente na carteira do usuário.");
+
+            Walllet -= amount;
+        }
     }
 }
