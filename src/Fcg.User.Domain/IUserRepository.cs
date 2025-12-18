@@ -4,7 +4,7 @@ namespace Fcg.User.Domain
     {
         Task<User?> GetByIdAsync(Guid id);
         Task SaveAsync(User user);
-        Task DeleteAsync(Guid id);
+        Task DeleteAsync(User user);
         Task UpdateWalletAsync(User user);
     }
 }

@@ -12,9 +12,16 @@ namespace Fcg.User.Infra.Repositories
             _context = context;
         }
 
-        public Task DeleteAsync(Guid id)
+        public async Task DeleteAsync(Domain.User user)
         {
-            throw new NotImplementedException();
+            var entity = new Tables.User
+            {
+                Id = user.Id
+            };
+
+            _context.Users.Remove(entity);
+
+            await _context.SaveChangesAsync();
         }
 
         public async Task<Domain.User?> GetByIdAsync(Guid id)

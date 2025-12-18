@@ -28,6 +28,11 @@ namespace Fcg.User.Domain
             Library = library;
         }
 
+        public void Update(string name)
+        {
+            Name = name;
+        }
+
         public void AddGameToLibrary(Guid gameId)
         {
             if (gameId == Guid.Empty)

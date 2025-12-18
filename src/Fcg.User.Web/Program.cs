@@ -88,6 +88,8 @@ app.MapGet("/api/users", async ([AsParameters] GetUsersRequest request, IMediato
 
 app.MapPut("/api/users/{id}", async (Guid id, [FromBody] UpdateUserRequest request, IMediator _mediator) =>
 {
+    request.Id = id;
+
     var response = await _mediator.Send(request);
 
     return Results.Ok(response);
