@@ -83,6 +83,13 @@ app.MapGet("users/{id}", async (Guid id, IMediator _mediator) =>
     return Results.Ok(response);
 }).AllowAnonymous().WithTags("Users");
 
+app.MapGet("users/{id}/most-owned-genre", async (Guid id, IMediator _mediator) =>
+{
+    var response = await _mediator.Send(new GetMostOwnedGenreRequest { UserId = id });
+
+    return Results.Ok(response);
+}).AllowAnonymous().WithTags("Users");
+
 app.MapGet("users", async ([AsParameters] GetUsersRequest request, IMediator _mediator) =>
 {
     var response = await _mediator.Send(request);
