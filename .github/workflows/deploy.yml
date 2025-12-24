@@ -2,7 +2,7 @@ name: Deploy Fcg User
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "main" ]
 
 jobs:
   deploy-user:
