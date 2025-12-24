@@ -140,11 +140,8 @@ app.MapPost("users/{id}/debit", async (Guid id, [FromBody] DebitWalletRequest re
 #endregion
 
 #region Middleware Pipeline
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
