@@ -120,6 +120,15 @@ app.MapPost("users", async ([FromBody] RegisterUserRequest request, IMediator _m
     return Results.Ok(response);
 }).AllowAnonymous().WithTags("Users");
 
+app.MapPost("users/{id}/buy-games", async (Guid id, [FromBody] BuyGamesRequest request, IMediator _mediator) =>
+{
+    request.UserId = id;
+
+    var response = await _mediator.Send(request);
+
+    return Results.Ok(response);
+}).AllowAnonymous().WithTags("Users");
+
 app.MapPost("users/{id}/credit", async (Guid id, [FromBody] CreditWalletRequest request, IMediator _mediator) =>
 {
     request.Id = id;

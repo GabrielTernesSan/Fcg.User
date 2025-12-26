@@ -12,6 +12,30 @@ namespace Fcg.User.Infra.Repositories
             _context = context;
         }
 
+        public async Task BuyGameAsync(Domain.User user)
+        {
+            foreach (var game in user.Library)
+            {
+                var entity = await _context.UserGames
+                    .FirstOrDefaultAsync(ug => ug.GameId == game.Id && ug.UserId == user.Id);
+
+                if (entity == null)
+                {
+                    entity = new Tables.UserGame
+                    {
+                        Id = game.Id,
+                        UserId = user.Id,
+                        GameId = game.GameId,
+                        DateToPurchase = DateTime.SpecifyKind(game.DateToPurchase.Date, DateTimeKind.Utc)
+                    };
+
+                    _context.UserGames.Add(entity);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
         public async Task DeleteAsync(Domain.User user)
         {
             var entity = new Tables.User

@@ -44,14 +44,6 @@ namespace Fcg.User.Domain
             Library.Add(new UserGame(gameId, DateTimeOffset.Now));
         }
 
-        public void RemoveGameFromLibrary(Guid gameId)
-        {
-            var game = Library.FirstOrDefault(x => x.GameId == gameId);
-
-            if (game != null)
-                Library.Remove(game);
-        }
-
         public void AddFunds(decimal amount)
         {
             if (amount <= 0)
