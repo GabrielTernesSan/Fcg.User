@@ -51,5 +51,40 @@ namespace Fcg.User.Proxy.Games.Client
 
             return response;
         }
+
+        public async Task<Response<IEnumerable<ExternalGamesResponse>>> GetGamesAsync(IEnumerable<Guid> ids)
+        {
+            var response = new Response<IEnumerable<ExternalGamesResponse>>();
+
+            var queryString = string.Join("&", ids.Select(id => $"gameIds={id}"));
+            var url = $"{_gamesConfiguration.Url}/api/games/ids?{queryString}";
+
+            try
+            {
+                using var httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, url);
+                var httpResponseMessage = await _httpClient.SendAsync(httpRequestMessage);
+
+                if (!httpResponseMessage.IsSuccessStatusCode)
+                {
+                    var status = (int)httpResponseMessage.StatusCode;
+                    var reason = httpResponseMessage.ReasonPhrase ?? "Sem motivo informado";
+                    response.AddError($"Erro ao enviar dados ({status} {reason}).");
+                    return response;
+                }
+
+                var json = await httpResponseMessage.Content.ReadAsStringAsync();
+
+                if (!string.IsNullOrWhiteSpace(json))
+                {
+                    response.Result = JsonSerializer.Deserialize<IEnumerable<ExternalGamesResponse>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                }
+            }
+            catch (Exception ex)
+            {
+                response.AddError($"Erro ao receber dados ({ex.Message})");
+            }
+
+            return response;
+        }
     }
 }

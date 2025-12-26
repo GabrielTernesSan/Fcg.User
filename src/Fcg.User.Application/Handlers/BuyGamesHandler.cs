@@ -29,40 +29,30 @@ namespace Fcg.User.Application.Handlers
                 return response;
             }
 
-            var gameIds = request.GamesId;
-
-            if (gameIds.Any())
+            if (request.GamesId != null && request.GamesId.Any())
             {
-                foreach (var gameId in gameIds)
+                var externalGameResponse = await _clientGame.GetGamesAsync(request.GamesId);
+
+                if (externalGameResponse.HasErrors || externalGameResponse.Result == null)
                 {
-                    var externalGameResponse = await _clientGame.GetGameAsync(gameId);
+                    response.AddError("Erro ao obter informações dos jogos externos.");
+                    return response;
+                }
 
-                    if (externalGameResponse.HasErrors)
-                    {
-                        response.AddError("Erro ao obter jogos.");
-                    }
-                    else
-                    {
-                        var gameResposne = externalGameResponse.Result;
+                foreach (var gameData in externalGameResponse.Result)
+                {
+                    user.AddGameToLibrary(gameData.Id);
+                }
 
-                        var game = new Domain.Queries.Responses.GameResponse
-                        {
-                            Id = gameResposne.Id,
-                            Title = gameResposne.Title,
-                            Description = gameResposne.Description,
-                            Price = gameResposne.Price,
-                            Genre = gameResposne.Genre
-                        };
-
-                        if (game != null)
-                        {
-                            user.AddGameToLibrary(game.Id);
-                        }
-                    }
+                try
+                {
+                    await _userRepository.BuyGameAsync(user);
+                }
+                catch (Exception ex)
+                {
+                    response.AddError($"Erro ao salvar compra: {ex.Message}");
                 }
             }
-
-            await _userRepository.BuyGameAsync(user);
 
             return response;
         }

@@ -44,33 +44,26 @@ namespace Fcg.User.Application.Handlers
 
             var gameIds = await _userQuery.GetGamesByUserIdAsync(user.Id, cancellationToken) ?? [];
 
-            if (gameIds.Any())
+            if (gameIds != null && gameIds.Any())
             {
-                foreach ( var gameId in gameIds)
+                var externalGamesResponse = await _clientGame.GetGamesAsync(gameIds);
+
+                if (externalGamesResponse.HasErrors)
                 {
-                    var externalGameResponse = await _clientGame.GetGameAsync(gameId);
-
-                    if (externalGameResponse.HasErrors)
+                    response.AddError("Erro ao obter detalhes dos jogos da biblioteca.");
+                }
+                else if (externalGamesResponse.Result != null)
+                {
+                    foreach (var g in externalGamesResponse.Result)
                     {
-                        response.AddError("Erro ao obter jogos da biblioteca do usuário.");
-                    }
-                    else
-                    {
-                        var gameResposne = externalGameResponse.Result;
-
-                        var game = new Domain.Queries.Responses.GameResponse
+                        user.Library?.Add(new Domain.Queries.Responses.GameResponse
                         {
-                            Id = gameResposne.Id,
-                            Title = gameResposne.Title,
-                            Description = gameResposne.Description,
-                            Price = gameResposne.Price,
-                            Genre = gameResposne.Genre
-                        };
-
-                        if (game != null)
-                        {
-                            user.Library?.Add(game);
-                        }
+                            Id = g.Id,
+                            Title = g.Title,
+                            Description = g.Description,
+                            Price = g.Price,
+                            Genre = g.Genre
+                        });
                     }
                 }
             }
