@@ -17,7 +17,7 @@ namespace Fcg.User.Infra.Repositories
             foreach (var game in user.Library)
             {
                 var entity = await _context.UserGames
-                    .FirstOrDefaultAsync(ug => ug.GameId == game.Id && ug.UserId == user.Id);
+                    .FirstOrDefaultAsync(ug => ug.GameId == game.GameId && ug.UserId == user.Id);
 
                 if (entity == null)
                 {
@@ -30,6 +30,10 @@ namespace Fcg.User.Infra.Repositories
                     };
 
                     _context.UserGames.Add(entity);
+                }
+                else
+                {
+                    continue;
                 }
             }
 

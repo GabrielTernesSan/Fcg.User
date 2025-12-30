@@ -39,7 +39,7 @@ namespace Fcg.User.Domain
                 throw new ArgumentException("ID do game inválido.", nameof(gameId));
 
             if (Library.Select(x => x.GameId).Contains(gameId))
-                throw new InvalidOperationException($"O game com ID '{gameId}' já está na biblioteca do usuário.");
+                return;
 
             Library.Add(new UserGame(gameId, DateTimeOffset.Now));
         }
